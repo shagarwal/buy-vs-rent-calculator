@@ -329,6 +329,11 @@
     <div class="container">
         <h1>Buy vs Rent Calculator</h1>
 
+        <div class="card" id="savedQueriesCard" style="display: none;">
+            <h2>Recent Queries</h2>
+            <div id="savedQueriesList"></div>
+        </div>
+
         <div class="card">
             <h2>Property & Financial Details</h2>
             <div class="input-grid">
@@ -445,11 +450,6 @@
                     <button onclick="saveCurrentQuery()">Save Query</button>
                 </div>
             </div>
-        </div>
-
-        <div class="card" id="savedQueriesCard" style="display: none;">
-            <h2>Recent Queries</h2>
-            <div id="savedQueriesList"></div>
         </div>
 
         <div class="results" id="results">
@@ -569,12 +569,16 @@
         function loadSavedQueries() {
             const savedQueries = JSON.parse(localStorage.getItem('buyVsRentQueries') || '[]');
 
+            document.getElementById('savedQueriesCard').style.display = 'block';
+
             if (savedQueries.length === 0) {
-                document.getElementById('savedQueriesCard').style.display = 'none';
+                document.getElementById('savedQueriesList').innerHTML = `
+                    <div style="padding: 16px; text-align: center; color: #718096; font-size: 14px;">
+                        No saved queries yet. Run a calculation and save it to see it here!
+                    </div>
+                `;
                 return;
             }
-
-            document.getElementById('savedQueriesCard').style.display = 'block';
 
             const listHTML = savedQueries.map((query, index) => {
                 const date = new Date(query.timestamp).toLocaleDateString();
