@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy vs Rent Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #1a202c;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            color: #2d3748;
+            margin-bottom: 24px;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="number"], select {
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .calculate-btn:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 24px;
+        }
+
+        .summary-table th,
+        .summary-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .summary-table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .summary-table td {
+            color: #2d3748;
+            font-size: 15px;
+        }
+
+        .summary-table td.number {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-weight: 500;
+        }
+
+        .summary-table td.label {
+            font-weight: 500;
+        }
+
+        .recommendation {
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .recommendation.buy-better {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            color: #166534;
+        }
+
+        .recommendation.rent-better {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            color: #1e40af;
+        }
+
+        .chart-container {
+            margin: 24px 0;
+            padding: 24px;
+            background: #fafafa;
+            border-radius: 12px;
+            position: relative;
+            height: 400px;
+        }
+
+        canvas {
+            max-height: 350px;
+        }
+
+        .breakdown-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+        }
+
+        .breakdown-table th,
+        .breakdown-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .breakdown-table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .breakdown-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .breakdown-table td.number {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .saved-query-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .saved-query-item:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .saved-query-name {
+            flex: 1;
+            font-weight: 500;
+            color: #2d3748;
+            cursor: pointer;
+        }
+
+        .saved-query-details {
+            font-size: 12px;
+            color: #718096;
+            margin-left: 12px;
+        }
+
+        .saved-query-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 12px;
+        }
+
+        .query-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .query-btn.load {
+            background: #4299e1;
+            color: white;
+        }
+
+        .query-btn.load:hover {
+            background: #3182ce;
+        }
+
+        .query-btn.delete {
+            background: #fc8181;
+            color: white;
+        }
+
+        .query-btn.delete:hover {
+            background: #f56565;
+        }
+
+        .save-query-section {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .save-query-section.show {
+            display: block;
+        }
+
+        .save-query-input {
+            display: flex;
+            gap: 8px;
+        }
+
+        .save-query-input input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .save-query-input button {
+            padding: 10px 20px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .save-query-input button:hover {
+            background: #38a169;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Buy vs Rent Calculator</h1>
+
+        <div class="card">
+            <h2>Property & Financial Details</h2>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="homePrice">Home Price ($)</label>
+                    <input type="number" id="homePrice" value="400000" min="0">
+                </div>
+                <div class="input-group">
+                    <label for="downPayment">Down Payment (%)</label>
+                    <input type="number" id="downPayment" value="20" min="0" max="100">
+                </div>
+                <div class="input-group">
+                    <label for="interestRate">Interest Rate (%)</label>
+                    <input type="number" id="interestRate" value="6.5" step="0.1" min="0">
+                </div>
+                <div class="input-group">
+                    <label for="loanTerm">Loan Term (years)</label>
+                    <input type="number" id="loanTerm" value="30" min="1">
+                </div>
+                <div class="input-group">
+                    <label for="state">State (for Property Tax)</label>
+                    <select id="state">
+                        <option value="0.31">Hawaii - 0.31%</option>
+                        <option value="0.46">Alabama - 0.46%</option>
+                        <option value="0.52">Louisiana - 0.52%</option>
+                        <option value="0.56">Delaware - 0.56%</option>
+                        <option value="0.56">District of Columbia - 0.56%</option>
+                        <option value="0.57">South Carolina - 0.57%</option>
+                        <option value="0.58">West Virginia - 0.58%</option>
+                        <option value="0.60">Colorado - 0.60%</option>
+                        <option value="0.62">Nevada - 0.62%</option>
+                        <option value="0.63">Wyoming - 0.63%</option>
+                        <option value="0.63">Arkansas - 0.63%</option>
+                        <option value="0.64">Utah - 0.64%</option>
+                        <option value="0.69">Tennessee - 0.69%</option>
+                        <option value="0.69">Idaho - 0.69%</option>
+                        <option value="0.72">Arizona - 0.72%</option>
+                        <option value="0.74">New Mexico - 0.74%</option>
+                        <option value="0.76">Virginia - 0.76%</option>
+                        <option value="0.77">Montana - 0.77%</option>
+                        <option value="0.79">North Carolina - 0.79%</option>
+                        <option value="0.81">Mississippi - 0.81%</option>
+                        <option value="0.86">California - 0.86%</option>
+                        <option value="0.90">Kentucky - 0.90%</option>
+                        <option value="0.90">Georgia - 0.90%</option>
+                        <option value="0.91">Oklahoma - 0.91%</option>
+                        <option value="0.95">Indiana - 0.95%</option>
+                        <option value="0.97">Florida - 0.97%</option>
+                        <option value="0.98">Missouri - 0.98%</option>
+                        <option value="1.00">North Dakota - 1.00%</option>
+                        <option value="1.03">Oregon - 1.03%</option>
+                        <option value="1.04">Washington - 1.04%</option>
+                        <option value="1.06">Maryland - 1.06%</option>
+                        <option value="1.09">Minnesota - 1.09%</option>
+                        <option value="1.09">South Dakota - 1.09%</option>
+                        <option value="1.11">Maine - 1.11%</option>
+                        <option value="1.13">Kansas - 1.13%</option>
+                        <option value="1.18">Massachusetts - 1.18%</option>
+                        <option value="1.21" selected>Michigan - 1.21%</option>
+                        <option value="1.25">Alaska - 1.25%</option>
+                        <option value="1.28">New York - 1.28%</option>
+                        <option value="1.36">Rhode Island - 1.36%</option>
+                        <option value="1.38">Iowa - 1.38%</option>
+                        <option value="1.43">Pennsylvania - 1.43%</option>
+                        <option value="1.53">Nebraska - 1.53%</option>
+                        <option value="1.56">Ohio - 1.56%</option>
+                        <option value="1.63">Texas - 1.63%</option>
+                        <option value="1.68">Wisconsin - 1.68%</option>
+                        <option value="1.73">Vermont - 1.73%</option>
+                        <option value="1.89">Connecticut - 1.89%</option>
+                        <option value="1.96">New Hampshire - 1.96%</option>
+                        <option value="2.13">Illinois - 2.13%</option>
+                        <option value="2.23">New Jersey - 2.23%</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="homeInsurance">Home Insurance ($ per year)</label>
+                    <input type="number" id="homeInsurance" value="1200" min="0">
+                </div>
+                <div class="input-group">
+                    <label for="hoaFees">HOA Fees ($ per month)</label>
+                    <input type="number" id="hoaFees" value="100" min="0">
+                </div>
+                <div class="input-group">
+                    <label for="maintenance">Maintenance (% per year)</label>
+                    <input type="number" id="maintenance" value="1" step="0.1" min="0">
+                </div>
+                <div class="input-group">
+                    <label for="homeAppreciation">Home Appreciation (% per year)</label>
+                    <input type="number" id="homeAppreciation" value="3" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="monthlyRent">Monthly Rent ($)</label>
+                    <input type="number" id="monthlyRent" value="2000" min="0">
+                </div>
+                <div class="input-group">
+                    <label for="rentIncrease">Rent Increase (% per year)</label>
+                    <input type="number" id="rentIncrease" value="3" step="0.1" min="0">
+                </div>
+                <div class="input-group">
+                    <label for="taxBracket">Your Tax Bracket (%)</label>
+                    <input type="number" id="taxBracket" value="24" min="0" max="37">
+                </div>
+                <div class="input-group">
+                    <label for="yearsToCompare">Years to Compare</label>
+                    <input type="number" id="yearsToCompare" value="10" min="1" max="30">
+                </div>
+            </div>
+            <button class="calculate-btn" onclick="calculate()">Calculate</button>
+
+            <div class="save-query-section" id="saveQuerySection">
+                <div class="save-query-input">
+                    <input type="text" id="queryName" placeholder="Name this query (e.g., 'Downtown Condo', 'Suburban House')">
+                    <button onclick="saveCurrentQuery()">Save Query</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="savedQueriesCard" style="display: none;">
+            <h2>Recent Queries</h2>
+            <div id="savedQueriesList"></div>
+        </div>
+
+        <div class="results" id="results">
+            <div class="card">
+                <h2>Financial Summary</h2>
+                <table class="summary-table" id="summaryTable"></table>
+                <div id="recommendation"></div>
+            </div>
+
+            <div class="card">
+                <h2>Tax Savings Breakdown</h2>
+                <div id="taxSavingsExplanation"></div>
+                <table class="breakdown-table" id="taxSavingsTable"></table>
+            </div>
+
+            <div class="card">
+                <h2>True Cost Comparison Over Time</h2>
+                <p style="color: #4a5568; margin-bottom: 16px; font-size: 14px;">
+                    This chart compares rent payments (all lost) vs. money spent on homeownership that doesn't build equity (interest, taxes, insurance, maintenance, HOA fees).
+                </p>
+                <div class="chart-container">
+                    <canvas id="costChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Mortgage Breakdown (Interest vs Principal)</h2>
+                <div class="chart-container">
+                    <canvas id="mortgageChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Payment Schedule Details</h2>
+                <table class="breakdown-table" id="scheduleTable"></table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let costChartInstance = null;
+        let mortgageChartInstance = null;
+        const MAX_SAVED_QUERIES = 5;
+
+        // Load saved queries on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadSavedQueries();
+        });
+
+        function getCurrentQueryData() {
+            return {
+                homePrice: document.getElementById('homePrice').value,
+                downPayment: document.getElementById('downPayment').value,
+                interestRate: document.getElementById('interestRate').value,
+                loanTerm: document.getElementById('loanTerm').value,
+                state: document.getElementById('state').value,
+                homeInsurance: document.getElementById('homeInsurance').value,
+                hoaFees: document.getElementById('hoaFees').value,
+                maintenance: document.getElementById('maintenance').value,
+                homeAppreciation: document.getElementById('homeAppreciation').value,
+                monthlyRent: document.getElementById('monthlyRent').value,
+                rentIncrease: document.getElementById('rentIncrease').value,
+                taxBracket: document.getElementById('taxBracket').value,
+                yearsToCompare: document.getElementById('yearsToCompare').value,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function loadQueryData(queryData) {
+            document.getElementById('homePrice').value = queryData.homePrice;
+            document.getElementById('downPayment').value = queryData.downPayment;
+            document.getElementById('interestRate').value = queryData.interestRate;
+            document.getElementById('loanTerm').value = queryData.loanTerm;
+            document.getElementById('state').value = queryData.state;
+            document.getElementById('homeInsurance').value = queryData.homeInsurance;
+            document.getElementById('hoaFees').value = queryData.hoaFees;
+            document.getElementById('maintenance').value = queryData.maintenance;
+            document.getElementById('homeAppreciation').value = queryData.homeAppreciation;
+            document.getElementById('monthlyRent').value = queryData.monthlyRent;
+            document.getElementById('rentIncrease').value = queryData.rentIncrease;
+            document.getElementById('taxBracket').value = queryData.taxBracket;
+            document.getElementById('yearsToCompare').value = queryData.yearsToCompare;
+        }
+
+        function saveCurrentQuery() {
+            const queryName = document.getElementById('queryName').value.trim();
+            if (!queryName) {
+                alert('Please enter a name for this query');
+                return;
+            }
+
+            const queryData = getCurrentQueryData();
+            queryData.name = queryName;
+
+            let savedQueries = JSON.parse(localStorage.getItem('buyVsRentQueries') || '[]');
+
+            // Add new query at the beginning
+            savedQueries.unshift(queryData);
+
+            // Keep only the last 5 queries
+            if (savedQueries.length > MAX_SAVED_QUERIES) {
+                savedQueries = savedQueries.slice(0, MAX_SAVED_QUERIES);
+            }
+
+            localStorage.setItem('buyVsRentQueries', JSON.stringify(savedQueries));
+
+            // Clear the input
+            document.getElementById('queryName').value = '';
+
+            // Show success message
+            alert('Query saved successfully!');
+
+            // Reload the saved queries list
+            loadSavedQueries();
+        }
+
+        function loadSavedQueries() {
+            const savedQueries = JSON.parse(localStorage.getItem('buyVsRentQueries') || '[]');
+
+            if (savedQueries.length === 0) {
+                document.getElementById('savedQueriesCard').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('savedQueriesCard').style.display = 'block';
+
+            const listHTML = savedQueries.map((query, index) => {
+                const date = new Date(query.timestamp).toLocaleDateString();
+                return `
+                    <div class="saved-query-item">
+                        <div class="saved-query-name" onclick="loadQuery(${index})">
+                            ${query.name}
+                        </div>
+                        <div class="saved-query-details">
+                            $${parseFloat(query.homePrice).toLocaleString()} • ${date}
+                        </div>
+                        <div class="saved-query-actions">
+                            <button class="query-btn load" onclick="loadQuery(${index})">Load</button>
+                            <button class="query-btn delete" onclick="deleteQuery(${index})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('savedQueriesList').innerHTML = listHTML;
+        }
+
+        function loadQuery(index) {
+            const savedQueries = JSON.parse(localStorage.getItem('buyVsRentQueries') || '[]');
+            if (savedQueries[index]) {
+                loadQueryData(savedQueries[index]);
+                // Scroll to top so user can see the loaded values
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function deleteQuery(index) {
+            if (confirm('Are you sure you want to delete this query?')) {
+                let savedQueries = JSON.parse(localStorage.getItem('buyVsRentQueries') || '[]');
+                savedQueries.splice(index, 1);
+                localStorage.setItem('buyVsRentQueries', JSON.stringify(savedQueries));
+                loadSavedQueries();
+            }
+        }
+
+        function calculate() {
+            // Show the save query section after first calculation
+            document.getElementById('saveQuerySection').classList.add('show');
+            const homePrice = parseFloat(document.getElementById('homePrice').value);
+            const downPaymentPercent = parseFloat(document.getElementById('downPayment').value);
+            const interestRate = parseFloat(document.getElementById('interestRate').value) / 100;
+            const loanTerm = parseInt(document.getElementById('loanTerm').value);
+            const propertyTaxRate = parseFloat(document.getElementById('state').value) / 100;
+            const homeInsurance = parseFloat(document.getElementById('homeInsurance').value);
+            const hoaFees = parseFloat(document.getElementById('hoaFees').value);
+            const maintenanceRate = parseFloat(document.getElementById('maintenance').value) / 100;
+            const homeAppreciationRate = parseFloat(document.getElementById('homeAppreciation').value) / 100;
+            const monthlyRent = parseFloat(document.getElementById('monthlyRent').value);
+            const rentIncreaseRate = parseFloat(document.getElementById('rentIncrease').value) / 100;
+            const yearsToCompare = parseInt(document.getElementById('yearsToCompare').value);
+            const taxBracket = parseFloat(document.getElementById('taxBracket').value) / 100;
+
+            const downPayment = homePrice * (downPaymentPercent / 100);
+            const loanAmount = homePrice - downPayment;
+            const monthlyRate = interestRate / 12;
+            const numPayments = loanTerm * 12;
+
+            const monthlyMortgage = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+                                   (Math.pow(1 + monthlyRate, numPayments) - 1);
+
+            let cumulativeBuying = 0;
+            let cumulativeRenting = 0;
+            let cumulativeNonEquitySpending = 0;
+            let buyingCosts = [];
+            let rentingCosts = [];
+            let nonEquitySpending = [];
+            let scheduleData = [];
+            let taxSavingsData = [];
+            let remainingBalance = loanAmount;
+            let totalTaxSavings = 0;
+
+            for (let year = 1; year <= yearsToCompare; year++) {
+                let yearInterest = 0;
+                let yearPrincipal = 0;
+
+                for (let month = 1; month <= 12; month++) {
+                    const interestPayment = remainingBalance * monthlyRate;
+                    const principalPayment = monthlyMortgage - interestPayment;
+
+                    yearInterest += interestPayment;
+                    yearPrincipal += principalPayment;
+
+                    if (remainingBalance > 0) {
+                        remainingBalance = Math.max(0, remainingBalance - principalPayment);
+                    }
+                }
+
+                const currentHomeValue = homePrice * Math.pow(1 + homeAppreciationRate, year);
+                const propertyTax = currentHomeValue * propertyTaxRate;
+                const maintenance = currentHomeValue * maintenanceRate;
+                const yearlyHOA = hoaFees * 12;
+
+                // Tax savings from mortgage interest deduction (capped at $750k loan)
+                const deductibleLoan = Math.min(loanAmount, 750000);
+                const deductibleInterest = yearInterest * (deductibleLoan / loanAmount);
+                const yearTaxSavings = deductibleInterest * taxBracket;
+                totalTaxSavings += yearTaxSavings;
+
+                // Store tax savings details for breakdown
+                taxSavingsData.push({
+                    year: year,
+                    grossInterest: yearInterest,
+                    deductibleInterest: deductibleInterest,
+                    taxBracket: taxBracket * 100,
+                    taxSavings: yearTaxSavings
+                });
+
+                const totalBuyingCost = (year === 1 ? downPayment : 0) +
+                                       (monthlyMortgage * 12) +
+                                       propertyTax +
+                                       homeInsurance +
+                                       maintenance +
+                                       yearlyHOA -
+                                       yearTaxSavings;
+
+                // Non-equity spending: everything except principal payments
+                const yearNonEquitySpending = yearInterest +
+                                             propertyTax +
+                                             homeInsurance +
+                                             maintenance +
+                                             yearlyHOA -
+                                             yearTaxSavings;
+
+                const currentRent = monthlyRent * Math.pow(1 + rentIncreaseRate, year - 1);
+                const totalRentingCost = currentRent * 12;
+
+                cumulativeBuying += totalBuyingCost;
+                cumulativeRenting += totalRentingCost;
+                cumulativeNonEquitySpending += yearNonEquitySpending;
+
+                buyingCosts.push(cumulativeBuying);
+                rentingCosts.push(cumulativeRenting);
+                nonEquitySpending.push(cumulativeNonEquitySpending);
+
+                const loanPayoff = homePrice - remainingBalance;
+                const baseEquity = loanPayoff;
+                const appreciationEquity = currentHomeValue - homePrice;
+                const totalEquity = currentHomeValue - remainingBalance;
+
+                scheduleData.push({
+                    year: year,
+                    monthlyPayment: monthlyMortgage,
+                    interest: yearInterest,
+                    principal: yearPrincipal,
+                    propertyTax: propertyTax,
+                    insurance: homeInsurance,
+                    maintenance: maintenance,
+                    hoa: yearlyHOA,
+                    taxSavings: yearTaxSavings,
+                    remainingBalance: remainingBalance,
+                    homeValue: currentHomeValue,
+                    baseEquity: baseEquity,
+                    appreciationEquity: appreciationEquity,
+                    totalEquity: totalEquity,
+                    rent: currentRent * 12
+                });
+            }
+
+            const totalBuying = cumulativeBuying;
+            const totalRenting = cumulativeRenting;
+            const finalData = scheduleData[scheduleData.length - 1];
+            const finalEquity = finalData.totalEquity;
+
+            const netBuyingCost = totalBuying - finalEquity;
+
+            renderSummary(totalBuying, totalRenting, finalData, netBuyingCost, monthlyMortgage, monthlyRent, totalTaxSavings);
+            renderTaxSavingsBreakdown(taxSavingsData, loanAmount, taxBracket);
+            renderCostChart(nonEquitySpending, rentingCosts);
+            renderMortgageChart(scheduleData);
+            renderScheduleTable(scheduleData);
+
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderSummary(totalBuying, totalRenting, finalData, netBuyingCost, monthlyMortgage, monthlyRent, totalTaxSavings) {
+            const isBuyingBetter = netBuyingCost < totalRenting;
+            const savings = Math.abs(netBuyingCost - totalRenting);
+
+            const summaryHTML = `
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th style="text-align: right;">Buying</th>
+                        <th style="text-align: right;">Renting</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="label">Total Cost</td>
+                        <td class="number">$${totalBuying.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td class="number">$${totalRenting.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Monthly Payment (Start)</td>
+                        <td class="number">$${monthlyMortgage.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td class="number">$${monthlyRent.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Base Equity (Loan Payoff)</td>
+                        <td class="number">$${finalData.baseEquity.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td class="number">$0</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Appreciation Equity</td>
+                        <td class="number">$${finalData.appreciationEquity.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td class="number">$0</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Total Equity</td>
+                        <td class="number">$${finalData.totalEquity.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td class="number">$0</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Total Tax Savings</td>
+                        <td class="number">$${totalTaxSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td class="number">$0</td>
+                    </tr>
+                    <tr style="background: #f7fafc; font-weight: 600;">
+                        <td class="label">Net Cost (After Equity)</td>
+                        <td class="number">$${netBuyingCost.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td class="number">$${totalRenting.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                    </tr>
+                </tbody>
+            `;
+
+            document.getElementById('summaryTable').innerHTML = summaryHTML;
+
+            const recommendationClass = isBuyingBetter ? 'buy-better' : 'rent-better';
+            const recommendationText = isBuyingBetter
+                ? `<strong>Buying is the better option.</strong> Over ${document.getElementById('yearsToCompare').value} years, you would save approximately <strong>$${savings.toLocaleString(undefined, {maximumFractionDigits: 0})}</strong> by buying instead of renting. You'll build <strong>$${finalData.totalEquity.toLocaleString(undefined, {maximumFractionDigits: 0})}</strong> in total equity and receive <strong>$${totalTaxSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}</strong> in tax savings.`
+                : `<strong>Renting is the better option.</strong> Over ${document.getElementById('yearsToCompare').value} years, renting would save you approximately <strong>$${savings.toLocaleString(undefined, {maximumFractionDigits: 0})}</strong> compared to buying. Consider investing the difference for potential long-term gains.`;
+
+            document.getElementById('recommendation').innerHTML = `<div class="recommendation ${recommendationClass}">${recommendationText}</div>`;
+        }
+
+        function renderTaxSavingsBreakdown(taxSavingsData, loanAmount, taxBracket) {
+            const totalSavings = taxSavingsData.reduce((sum, d) => sum + d.taxSavings, 0);
+            const avgAnnualSavings = totalSavings / taxSavingsData.length;
+
+            const explanationHTML = `
+                <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; margin-bottom: 20px; border-radius: 8px;">
+                    <h3 style="color: #1e40af; margin-bottom: 12px; font-size: 16px; font-weight: 600;">How Tax Savings Work</h3>
+                    <p style="color: #1e40af; margin-bottom: 8px; font-size: 14px; line-height: 1.6;">
+                        When you own a home, you can deduct mortgage interest from your taxable income (up to $750,000 of loan principal).
+                        This reduces your tax bill based on your tax bracket.
+                    </p>
+                    <p style="color: #1e40af; font-size: 14px; line-height: 1.6;">
+                        <strong>Your loan:</strong> $${loanAmount.toLocaleString(undefined, {maximumFractionDigits: 0})}<br>
+                        <strong>Deductible portion:</strong> $${Math.min(loanAmount, 750000).toLocaleString(undefined, {maximumFractionDigits: 0})}
+                        ${loanAmount > 750000 ? '(capped at IRS limit)' : ''}<br>
+                        <strong>Your tax bracket:</strong> ${(taxBracket * 100).toFixed(0)}%<br>
+                        <strong>Average annual tax savings:</strong> $${avgAnnualSavings.toLocaleString(undefined, {maximumFractionDigits: 0})}
+                    </p>
+                </div>
+            `;
+
+            document.getElementById('taxSavingsExplanation').innerHTML = explanationHTML;
+
+            const tableHTML = `
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Mortgage Interest Paid</th>
+                        <th>Deductible Interest</th>
+                        <th>Tax Bracket</th>
+                        <th>Tax Savings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${taxSavingsData.map(data => `
+                        <tr>
+                            <td>${data.year}</td>
+                            <td class="number">$${data.grossInterest.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td class="number">$${data.deductibleInterest.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td class="number">${data.taxBracket.toFixed(0)}%</td>
+                            <td class="number" style="color: #16a34a; font-weight: 600;">$${data.taxSavings.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                        </tr>
+                    `).join('')}
+                    <tr style="background: #f7fafc; font-weight: 600; border-top: 2px solid #cbd5e0;">
+                        <td>Total</td>
+                        <td class="number">$${taxSavingsData.reduce((sum, d) => sum + d.grossInterest, 0).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                        <td class="number">$${taxSavingsData.reduce((sum, d) => sum + d.deductibleInterest, 0).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                        <td class="number">-</td>
+                        <td class="number" style="color: #16a34a;">$${totalSavings.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                    </tr>
+                </tbody>
+            `;
+
+            document.getElementById('taxSavingsTable').innerHTML = tableHTML;
+        }
+
+        function renderCostChart(nonEquitySpending, rentingCosts) {
+            const ctx = document.getElementById('costChart');
+
+            if (costChartInstance) {
+                costChartInstance.destroy();
+            }
+
+            const years = nonEquitySpending.map((_, i) => `Year ${i + 1}`);
+
+            costChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Buying: Non-Equity Spending (Interest, Taxes, Insurance, Maintenance)',
+                            data: nonEquitySpending,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.1,
+                            fill: true
+                        },
+                        {
+                            label: 'Renting: Total Rent Paid',
+                            data: rentingCosts,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.1,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += '$' + context.parsed.y.toLocaleString(undefined, {maximumFractionDigits: 0});
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + (value / 1000).toFixed(0) + 'k';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderMortgageChart(scheduleData) {
+            const ctx = document.getElementById('mortgageChart');
+
+            if (mortgageChartInstance) {
+                mortgageChartInstance.destroy();
+            }
+
+            const sampleYears = scheduleData.filter((_, index) =>
+                index % Math.ceil(scheduleData.length / 10) === 0 || index === scheduleData.length - 1
+            );
+
+            const years = sampleYears.map(d => `Year ${d.year}`);
+            const interestData = sampleYears.map(d => d.interest);
+            const principalData = sampleYears.map(d => d.principal);
+
+            mortgageChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Interest',
+                            data: interestData,
+                            backgroundColor: '#fbbf24',
+                            borderWidth: 0
+                        },
+                        {
+                            label: 'Principal',
+                            data: principalData,
+                            backgroundColor: '#34d399',
+                            borderWidth: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += '$' + context.parsed.y.toLocaleString(undefined, {maximumFractionDigits: 0});
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + (value / 1000).toFixed(0) + 'k';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderScheduleTable(scheduleData) {
+            const tableHTML = `
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Monthly Payment</th>
+                        <th>Annual Interest</th>
+                        <th>Annual Principal</th>
+                        <th>Tax Savings</th>
+                        <th>Remaining Balance</th>
+                        <th>Home Value</th>
+                        <th>Base Equity</th>
+                        <th>Appreciation Equity</th>
+                        <th>Total Equity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${scheduleData.map(data => `
+                        <tr>
+                            <td>${data.year}</td>
+                            <td class="number">$${data.monthlyPayment.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td class="number">$${data.interest.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td class="number">$${data.principal.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td class="number">$${data.taxSavings.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td class="number">$${data.remainingBalance.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td class="number">$${data.homeValue.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td class="number">$${data.baseEquity.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td class="number">$${data.appreciationEquity.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                            <td class="number">$${data.totalEquity.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+
+            document.getElementById('scheduleTable').innerHTML = tableHTML;
+        }
+    </script>
+</body>
+</html>
